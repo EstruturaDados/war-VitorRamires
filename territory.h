@@ -4,10 +4,10 @@
 #define CHAR_NAME_TOTAL 30
 #define CHAR_COLOR_TOTAL 10
 
-struct Territory {
-    char name[CHAR_NAME_TOTAL];
-    char color[CHAR_COLOR_TOTAL];
-    int troops;
-};
+typedef struct {
+    char nome[CHAR_NAME_TOTAL];
+    char cor[CHAR_COLOR_TOTAL];
+    int tropas;
+} Territory;
 
 #endif

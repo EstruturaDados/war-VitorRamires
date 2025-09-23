@@ -1,53 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "battle.h"
 
-void attack(struct Territory* worldMap, int totalTerritories) {
-    int attacker, defender;
+void atacar(Territory* atacante, Territory* defensor) {
+    srand(time(NULL));
+    int dadoAtacante = rand() % 6 + 1;
+    int dadoDefensor = rand() % 6 + 1;
 
-    // Listar territórios
-    printf("\n-- Territory List --\n");
-    for (int i = 0; i < totalTerritories; i++) {
-        printf("%d - %s (%s) - Troops: %d\n", i + 1,
-               worldMap[i].name, worldMap[i].color, worldMap[i].troops);
-    }
+    printf("%s rolou %d, %s rolou %d\n", atacante->nome, dadoAtacante, defensor->nome, dadoDefensor);
 
-    // Escolher o atacante
-    do {
-        printf("Choose the attacker (1-%d): ", totalTerritories);
-        scanf("%d", &attacker);
-    } while (attacker < 1 || attacker > totalTerritories);
-
-    // Escolher o defensor
-    do {
-        printf("Choose the defender (1-%d): ", totalTerritories);
-        scanf("%d", &defender);
-    } while (defender < 1 || defender > totalTerritories || defender == attacker);
-
-    attacker--; defender--; // ajustar para índice do array
-
-    // Escolher vencedor aleatoriamente, caso 0 é o atacande, caso 1 é o defensor
-    int winner = rand() % 2; 
-
-    // Escolher número de tropas perdidas aletoriamente
-    int loserTroops = 0;
-    if (winner == 0) {
-        // atacante ou defensor vence, e assim é calculado a quantidade de tropas perdidas e dimuida com as tropas originais. 
-        if (worldMap[defender].troops > 0)
-            loserTroops = rand() % worldMap[defender].troops + 1;
-        worldMap[defender].troops -= loserTroops;
-        if (worldMap[defender].troops < 0) worldMap[defender].troops = 0;
-        printf("%s wins! %s lost %d troops.\n", worldMap[attacker].name, worldMap[defender].name, loserTroops);
+    if (dadoAtacante > dadoDefensor) {
+        // Atacante vence → transfere tropas do defensor para o atacante
+        int tropasTransferidas = defensor->tropas / 2;
+        atacante->tropas += tropasTransferidas;
+        defensor->tropas -= tropasTransferidas;
+        if(defensor->tropas < 0) defensor->tropas = 0;
+        printf("%s venceu! Recebeu %d tropas do defensor.\n", atacante->nome, tropasTransferidas);
     } else {
-        if (worldMap[attacker].troops > 0)
-            loserTroops = rand() % worldMap[attacker].troops + 1;
-        worldMap[attacker].troops -= loserTroops;
-        if (worldMap[attacker].troops < 0) worldMap[attacker].troops = 0;
-        printf("%s wins! %s lost %d troops.\n", worldMap[defender].name, worldMap[attacker].name, loserTroops);
+        // Defensor vence → transfere tropas do atacante para o defensor
+        int tropasTransferidas = atacante->tropas / 2;
+        defensor->tropas += tropasTransferidas;
+        atacante->tropas -= tropasTransferidas;
+        if(atacante->tropas < 0) atacante->tropas = 0;
+        printf("%s defendeu! Recebeu %d tropas do atacante.\n", defensor->nome, tropasTransferidas);
     }
-
-    // Mostrar estado final
-    printf("\n-- Territory Status --\n");
-    printf("%s: %d troops\n", worldMap[attacker].name, worldMap[attacker].troops);
-    printf("%s: %d troops\n", worldMap[defender].name, worldMap[defender].troops);
 }

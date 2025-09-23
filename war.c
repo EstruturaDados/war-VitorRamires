@@ -1,107 +1,114 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include "territory.h"
 #include "battle.h"
+#include "mission.h"
 
 #define ALL_TERRITORIES 5
+#define TOTAL_MISSOES 5
 
-// Limpar buffer
 void cleanBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
 int main() {
-    struct Territory* WorldMap;
+    Territory* WorldMap = (Territory*) calloc(ALL_TERRITORIES, sizeof(Territory));
     int totalTerritories = 0;
     int option;
 
-    // Alocar memória dinamicamente para o mapa
-    WorldMap = (struct Territory*) malloc(sizeof(struct Territory) * ALL_TERRITORIES);
-    if (!WorldMap) {
-        printf("Memory allocation failed!\n");
-        return 1;
-    }
+    // Missões
+    char* missoes[TOTAL_MISSOES] = {
+        "Conquistar território com mais de 5 tropas",
+        "Eliminar todas as tropas da cor vermelha",
+        "Possuir 3 territórios seguidos",
+        "Ter 10 tropas no total",
+        "Conquistar o território azul"
+    };
 
-    // Inicializar rand
-    srand(time(NULL));
+    char* missaoDoJogador = NULL;
+    atribuirMissao(&missaoDoJogador, missoes, TOTAL_MISSOES);
+    exibirMissao(missaoDoJogador);
 
-    // Loop do menu
     do {
-        printf("==================================\n");
-        printf("War_Territories\n");
-        printf("==================================\n");
-        printf("1 - Add new territory\n");
-        printf("2 - List All territories\n");
-        printf("3 - Battle Phase\n");
-        printf("0 - Exit\n");
-        printf("==================================\n");
-        printf("Choose an option: ");
-
+        printf("\n1 - Adicionar território\n2 - Listar territórios\n3 - Atacar\n0 - Sair\nEscolha: ");
         scanf("%d", &option);
         cleanBuffer();
 
-        switch (option) {
+        switch(option) {
             case 1:
-                if (totalTerritories < ALL_TERRITORIES) {
-                    printf("Territory name: ");
-                    fgets(WorldMap[totalTerritories].name, CHAR_NAME_TOTAL, stdin);
-                    WorldMap[totalTerritories].name[strcspn(WorldMap[totalTerritories].name, "\n")] = '\0';
+                if(totalTerritories < ALL_TERRITORIES) {
+                    printf("Nome do território: ");
+                    fgets(WorldMap[totalTerritories].nome, CHAR_NAME_TOTAL, stdin);
+                    WorldMap[totalTerritories].nome[strcspn(WorldMap[totalTerritories].nome, "\n")] = '\0';
 
-                    printf("Territory color: ");
-                    fgets(WorldMap[totalTerritories].color, CHAR_COLOR_TOTAL, stdin);
-                    WorldMap[totalTerritories].color[strcspn(WorldMap[totalTerritories].color, "\n")] = '\0';
+                    printf("Cor do território: ");
+                    fgets(WorldMap[totalTerritories].cor, CHAR_COLOR_TOTAL, stdin);
+                    WorldMap[totalTerritories].cor[strcspn(WorldMap[totalTerritories].cor, "\n")] = '\0';
 
-                    printf("Territory troops: ");
-                    scanf("%d", &WorldMap[totalTerritories].troops);
+                    printf("Tropas: ");
+                    scanf("%d", &WorldMap[totalTerritories].tropas);
                     cleanBuffer();
 
                     totalTerritories++;
-                    printf("-- Territory Added!\n");
                 } else {
-                    printf("-- World Map is full!\n");
+                    printf("Mapa cheio!\n");
                 }
                 break;
 
             case 2:
-                if (totalTerritories == 0) {
-                    printf("-- World Map is empty!\n");
-                } else {
-                    for (int i = 0; i < totalTerritories; i++) {
-                        printf("==================================\n");
-                        printf("Territory: %d\n", i + 1);
-                        printf("Territory name: %s\n", WorldMap[i].name);
-                        printf("Territory color: %s\n", WorldMap[i].color);
-                        printf("Territory troops: %d\n", WorldMap[i].troops);
-                    }
-                    printf("==================================\n");
+                for(int i=0;i<totalTerritories;i++) {
+                    printf("%d - %s (%s) - Tropas: %d\n", i+1, WorldMap[i].nome, WorldMap[i].cor, WorldMap[i].tropas);
                 }
                 break;
 
             case 3:
-                if (totalTerritories < 2) {
-                    printf("At least 2 territories are needed to attack!\n");
+                if(totalTerritories >= 2) {
+                    int atk, def;
+                    for(int i=0;i<totalTerritories;i++)
+                        printf("%d - %s (%s) - Tropas: %d\n", i+1, WorldMap[i].nome, WorldMap[i].cor, WorldMap[i].tropas);
+
+                    do {
+                        printf("Escolha o atacante: "); scanf("%d", &atk);
+                    } while(atk<1 || atk>totalTerritories);
+
+                    do {
+                        printf("Escolha o defensor: "); scanf("%d", &def);
+                    } while(def<1 || def>totalTerritories || def==atk);
+
+                    atacar(&WorldMap[atk-1], &WorldMap[def-1]);
+
+                    // Verifica missão
+                    if(verificarMissao(missaoDoJogador, WorldMap, totalTerritories)) {
+                        printf("\nMissão cumprida! Você venceu!\n");
+                    }
+                    
+                    // Verifica o estado atual dos territórios
+                    printf("\n-- Estado Atual dos Territórios --\n");
+                    for(int i=0;i<totalTerritories;i++) {
+                        printf("%d - %s (%s) - Tropas: %d\n", i+1, WorldMap[i].nome, WorldMap[i].cor, WorldMap[i].tropas);
+                    }
+
                 } else {
-                    attack(WorldMap, totalTerritories);
+                    printf("Necessário pelo menos 2 territórios para atacar.\n");
                 }
                 break;
 
             case 0:
-                printf("\nExiting the game...\n");
+                printf("Saindo...\n");
                 break;
 
             default:
-                printf("\nInvalid Option!\n");
-                printf("Press enter to continue\n");
-                getchar();
+                printf("Opção inválida!\n");
                 break;
         }
 
-    } while (option != 0);
+    } while(option != 0);
 
-    // Libera a memoria alocada
-    free(WorldMap); 
+    // Liberar memória
+    free(WorldMap);
+    free(missaoDoJogador);
+
     return 0;
 }

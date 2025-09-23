@@ -3,6 +3,6 @@
 
 #include "territory.h"
 
-void attack(struct Territory* worldMap, int totalTerritories);
+void atacar(Territory* atacante, Territory* defensor);
 
 #endif
